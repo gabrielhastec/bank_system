@@ -46,7 +46,7 @@ class Account:
         if valor <= 0:
             raise ValorInvalidoError("O valor do depósito deve ser positivo.")
         self.balance += valor
-        self.transactions.append({"tipo": "deposito", "valor": valor})
+        self.transactions.append(Transaction("deposito", valor))
         return self.balance
 
     def sacar(self, valor):
@@ -75,7 +75,7 @@ class Account:
 
         self.balance -= valor
         self.saques_realizados += 1
-        self.transactions.append({"tipo": "saque", "valor": valor})
+        self.transactions.append(Transaction("saque", valor))
         return self.balance
 
     def extrato(self):
