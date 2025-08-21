@@ -1,6 +1,4 @@
-
 from .exceptions import SaldoInsuficienteError, LimiteSaquesExcedidoError, ValorInvalidoError
-from .transaction import Transaction
 
 class Account:
     """
@@ -48,7 +46,7 @@ class Account:
         if valor <= 0:
             raise ValorInvalidoError("O valor do depósito deve ser positivo.")
         self.balance += valor
-        self.transactions.append(Transaction("deposito", valor))
+        self.transactions.append({"tipo": "deposito", "valor": valor})
         return self.balance
 
     def sacar(self, valor):
@@ -77,7 +75,7 @@ class Account:
 
         self.balance -= valor
         self.saques_realizados += 1
-        self.transactions.append(Transaction("saque", valor))
+        self.transactions.append({"tipo": "saque", "valor": valor})
         return self.balance
 
     def extrato(self):
@@ -88,4 +86,4 @@ class Account:
             tuple: Uma tupla contendo a lista de transações e o saldo atual.
         """
         return self.transactions, self.balance
-        
+    
