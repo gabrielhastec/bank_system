@@ -1,4 +1,5 @@
 from .exceptions import SaldoInsuficienteError, LimiteSaquesExcedidoError, ValorInvalidoError
+from .transaction import Transaction
 
 class Account:
     """
@@ -24,8 +25,8 @@ class Account:
             max_saques (int, opcional): Número máximo de saques permitidos. Padrão é 3.
         """
         self.owner = owner
-        self.balance = balance
-        self.saque_limite = saque_limite
+        self.balance = float(balance)
+        self.saque_limite = float(saque_limite)
         self.max_saques = max_saques
         self.saques_realizados = 0
         self.transactions = []
@@ -43,6 +44,11 @@ class Account:
         Raises:
             ValorInvalidoError: Se o valor do depósito for menor ou igual a zero.
         """
+        try:
+            valor = float(valor)
+        except (TypeError, ValueError):
+            raise ValorInvalidoError("O valor deve ser um número válido.")
+        
         if valor <= 0:
             raise ValorInvalidoError("O valor do depósito deve ser positivo.")
         self.balance += valor
@@ -64,6 +70,11 @@ class Account:
             SaldoInsuficienteError: Se o saldo for insuficiente para o saque.
             LimiteSaquesExcedidoError: Se o número máximo de saques for atingido.
         """
+        try:
+            valor = float(valor)
+        except (TypeError, ValueError):
+            raise ValorInvalidoError("O valor deve ser um número válido.")
+        
         if valor <= 0:
             raise ValorInvalidoError("O valor do saque deve ser positivo.")
         if valor > self.balance:
