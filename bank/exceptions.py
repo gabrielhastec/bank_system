@@ -1,6 +1,4 @@
 
-# bank/exceptions.py
-
 class BancoError(Exception):
     """Classe base para exceções do sistema bancário."""
     pass

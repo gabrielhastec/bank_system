@@ -1,100 +1,153 @@
-from .exceptions import SaldoInsuficienteError, LimiteSaquesExcedidoError, ValorInvalidoError
-from .transaction import Transaction
+import sqlite3
+from pathlib import Path
+from bank.exceptions import SaldoInsuficienteError, ValorInvalidoError
+
+DB_FILE = Path(__file__).resolve().parent.parent / "bank_system.db"
 
 class Account:
     """
-    Representa uma conta bancária com operações de depósito, saque e extrato.
-
-    Attributes:
-        owner (str): Nome do titular da conta.
-        balance (float): Saldo atual da conta.
-        saque_limite (float): Valor máximo permitido por saque.
-        max_saques (int): Número máximo de saques permitidos por dia.
-        saques_realizados (int): Contador de saques realizados.
-        transactions (list): Lista de transações realizadas.
+    Representa uma conta bancária com operações de depósito, saque, transferência e extrato.
     """
 
-    def __init__(self, owner, balance=0.0, saque_limite=500.0, max_saques=3):
+    def __init__(self, account_id: int, name: str, balance: float = 0.0):
         """
-        Inicializa uma nova instância de Account.
+        Inicializa uma nova conta.
 
         Args:
-            owner (str): Nome do titular da conta.
+            account_id (int): ID da conta.
+            name (str): Nome do titular da conta.
             balance (float, opcional): Saldo inicial da conta. Padrão é 0.0.
-            saque_limite (float, opcional): Limite de valor por saque. Padrão é 500.0.
-            max_saques (int, opcional): Número máximo de saques permitidos. Padrão é 3.
         """
-        self.owner = owner
-        self.balance = float(balance)
-        self.saque_limite = float(saque_limite)
-        self.max_saques = max_saques
-        self.saques_realizados = 0
-        self.transactions = []
+        self.account_id = account_id
+        self.name = name
+        self.balance = balance
 
-    def depositar(self, valor):
+    def _update_balance(self, new_balance: float) -> None:
+        """
+        Atualiza o saldo da conta no banco de dados.
+
+        Args:
+            new_balance (float): Novo saldo a ser atualizado.
+        """
+        with sqlite3.connect(DB_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE accounts SET balance = ? WHERE id = ?",
+                (new_balance, self.account_id)
+            )
+            conn.commit()
+        self.balance = new_balance
+
+    def _record_transaction(self, type_: str, amount: float) -> None:
+        """
+        Registra uma transação no banco de dados.
+
+        Args:
+            type_ (str): Tipo da transação (ex: 'deposit', 'withdraw', 'transfer_in', 'transfer_out').
+            amount (float): Valor da transação.
+        """
+        with sqlite3.connect(DB_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO transactions (account_id, type, amount) VALUES (?, ?, ?)",
+                (self.account_id, type_, amount)
+            )
+            conn.commit()
+
+    def deposit(self, amount: float) -> None:
         """
         Realiza um depósito na conta.
 
         Args:
-            valor (float): Valor a ser depositado.
-
-        Returns:
-            float: Saldo atualizado após o depósito.
+            amount (float): Valor a ser depositado.
 
         Raises:
-            ValorInvalidoError: Se o valor do depósito for menor ou igual a zero.
+            ValorInvalidoError: Se o valor do depósito não for positivo.
         """
-        try:
-            valor = float(valor)
-        except (TypeError, ValueError):
-            raise ValorInvalidoError("O valor deve ser um número válido.")
-        
-        if valor <= 0:
+        if amount <= 0:
             raise ValorInvalidoError("O valor do depósito deve ser positivo.")
-        self.balance += valor
-        self.transactions.append(Transaction("deposito", valor))
-        return self.balance
 
-    def sacar(self, valor):
+        new_balance = self.balance + amount
+        self._update_balance(new_balance)
+        self._record_transaction("deposit", amount)
+        print(f"Depósito de R$ {amount:.2f} realizado. Saldo atual: R$ {self.balance:.2f}")
+
+    def withdraw(self, amount: float) -> None:
         """
-        Realiza um saque na conta.
+        Realiza um saque da conta.
 
         Args:
-            valor (float): Valor a ser sacado.
-
-        Returns:
-            float: Saldo atualizado após o saque.
+            amount (float): Valor a ser sacado.
 
         Raises:
-            ValorInvalidoError: Se o valor do saque for menor ou igual a zero ou exceder o limite de saque.
-            SaldoInsuficienteError: Se o saldo for insuficiente para o saque.
-            LimiteSaquesExcedidoError: Se o número máximo de saques for atingido.
+            ValorInvalidoError: Se o valor do saque não for positivo.
+            SaldoInsuficienteError: Se não houver saldo suficiente.
         """
-        try:
-            valor = float(valor)
-        except (TypeError, ValueError):
-            raise ValorInvalidoError("O valor deve ser um número válido.")
-        
-        if valor <= 0:
+        if amount <= 0:
             raise ValorInvalidoError("O valor do saque deve ser positivo.")
-        if valor > self.balance:
-            raise SaldoInsuficienteError("Saldo insuficiente.")
-        if valor > self.saque_limite:
-            raise ValorInvalidoError("Valor excede o limite de saque.")
-        if self.saques_realizados >= self.max_saques:
-            raise LimiteSaquesExcedidoError("Número máximo de saques atingido.")
+        if amount > self.balance:
+            raise SaldoInsuficienteError("Saldo insuficiente para saque.")
 
-        self.balance -= valor
-        self.saques_realizados += 1
-        self.transactions.append(Transaction("saque", valor))
-        return self.balance
+        new_balance = self.balance - amount
+        self._update_balance(new_balance)
+        self._record_transaction("withdraw", amount)
+        print(f"Saque de R$ {amount:.2f} realizado. Saldo atual: R$ {self.balance:.2f}")
 
-    def extrato(self):
+    def transfer(self, target_id: int, amount: float) -> None:
         """
-        Retorna o extrato da conta.
+        Transfere um valor para outra conta.
 
-        Returns:
-            tuple: Uma tupla contendo a lista de transações e o saldo atual.
+        Args:
+            target_id (int): ID da conta de destino.
+            amount (float): Valor a ser transferido.
+
+        Raises:
+            ValorInvalidoError: Se o valor da transferência não for positivo.
+            SaldoInsuficienteError: Se não houver saldo suficiente.
+            ValueError: Se a conta de destino não for encontrada.
         """
-        return self.transactions, self.balance
-    
+        if amount <= 0:
+            raise ValorInvalidoError("O valor da transferência deve ser positivo.")
+        if amount > self.balance:
+            raise SaldoInsuficienteError("Saldo insuficiente para transferência.")
+
+        with sqlite3.connect(DB_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, balance FROM accounts WHERE id = ?", (target_id,))
+            target = cursor.fetchone()
+            if not target:
+                raise ValueError("Conta destino não encontrada.")
+
+            # Atualiza saldo do remetente
+            new_balance = self.balance - amount
+            self._update_balance(new_balance)
+            self._record_transaction("transfer_out", amount)
+
+            # Atualiza saldo do destinatário
+            new_target_balance = target[1] + amount
+            cursor.execute("UPDATE accounts SET balance = ? WHERE id = ?", (new_target_balance, target_id))
+            cursor.execute(
+                "INSERT INTO transactions (account_id, type, amount) VALUES (?, ?, ?)",
+                (target_id, "transfer_in", amount)
+            )
+            conn.commit()
+        print(f"Transferência de R$ {amount:.2f} realizada para conta {target_id}. Seu saldo atual: R$ {self.balance:.2f}")
+
+    def show_statement(self) -> None:
+        """
+        Exibe todas as transações da conta, ordenadas por data/hora.
+        """
+        with sqlite3.connect(DB_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT type, amount, timestamp FROM transactions WHERE account_id = ? ORDER BY timestamp ASC",
+                (self.account_id,)
+            )
+            rows = cursor.fetchall()
+
+        if not rows:
+            print("Nenhuma transação encontrada.")
+        else:
+            for row in rows:
+                print(f"[{row[2]}] {row[0]}: R$ {row[1]:.2f}")
+            print(f"Saldo atual: R$ {self.balance:.2f}")
