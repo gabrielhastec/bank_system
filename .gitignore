@@ -48,3 +48,9 @@ Thumbs.db
 # Logs
 # =============================
 *.log
+
+# =============================
+# Environment Variables
+# =============================
+
+bank_system.egg-info/
