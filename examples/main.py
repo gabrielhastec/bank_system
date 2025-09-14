@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import sqlite3
 from pathlib import Path
-from bank.account import Account
+from bank.models.account import Account
 
 DB_FILE = Path(__file__).resolve().parent.parent / "bank_system.db"
 

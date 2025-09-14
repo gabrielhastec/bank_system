@@ -1,5 +1,5 @@
 import pytest
-from bank.account import Account
+from bank.models.account import Account
 from bank.exceptions import SaldoInsuficienteError, ValorInvalidoError, LimiteSaquesExcedidoError
 
 def test_depositar_aumenta_saldo():
