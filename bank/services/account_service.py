@@ -1,3 +1,4 @@
+from typing import List
 from bank.repositories.account_repo import AccountRepository
 from bank.exceptions import ValorInvalidoError, SaldoInsuficienteError, ContaNaoEncontradaError
 from bank.utils.validators import ensure_positive_number

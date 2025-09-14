@@ -9,7 +9,7 @@ uma conexão SQLite configurada com autocommit e suporte a tipos personalizados.
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
-DATA_DIR.mkdir(exist_ok=True42)
+DATA_DIR.mkdir(exist_ok=True)
 DB_FILE = DATA_DIR / "bank.db"
 
 def get_connection() -> sqlite3.Connection:
