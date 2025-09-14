@@ -3,6 +3,7 @@ from bank.models.account import Account
 from bank.models.transaction import Transaction
 from bank.core.db import get_connection
 from bank.exceptions import ContaNaoEncontradaError, ContaDuplicadaError
+import sqlite3
 
 """Módulo que define a classe AccountRepository para persistência e consulta de contas e transações.
 
@@ -29,6 +30,7 @@ class AccountRepository:
 
         Raises:
             ContaDuplicadaError: Se já existe uma conta com o mesmo CPF.
+            sqlite3.OperationalError: Se houver um erro no banco de dados (ex.: tabela não existe).
         """
         with get_connection() as conn:
             cur = conn.cursor()
@@ -37,9 +39,12 @@ class AccountRepository:
                 conn.commit()
                 account_id = cur.lastrowid
                 return Account(id=account_id, cpf=cpf, name=name, balance=balance)
-            except Exception as e:
+            except sqlite3.IntegrityError as e:
                 # Detecta violação de UNIQUE no SQLite
                 raise ContaDuplicadaError(f"Conta com CPF {cpf} já existe.") from e
+            except sqlite3.OperationalError as e:
+                # Propaga erro de tabela inexistente ou outros problemas operacionais
+                raise sqlite3.OperationalError(f"Erro no banco de dados: {str(e)}") from e
 
     def get_account_by_id(self, account_id: int) -> Account:
         """Recupera uma conta do banco de dados pelo ID, incluindo suas transações.
@@ -125,4 +130,3 @@ class AccountRepository:
             cur.execute("SELECT id, account_id, type, amount, timestamp FROM transactions WHERE account_id = ? ORDER BY timestamp ASC", (account_id,))
             rows = cur.fetchall()
             return [Transaction(id=r["id"], account_id=r["account_id"], type=r["type"], amount=r["amount"], timestamp=r["timestamp"]) for r in rows]
-        
