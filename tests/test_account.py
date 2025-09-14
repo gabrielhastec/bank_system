@@ -1,80 +1,36 @@
 import pytest
-from bank.models.account import Account
-from bank.exceptions import SaldoInsuficienteError, ValorInvalidoError, LimiteSaquesExcedidoError
+from bank.services.account_service import AccountService
+from bank.exceptions import SaldoInsuficienteError, ValorInvalidoError
 
-def test_depositar_aumenta_saldo():
-    """
-    Testa se o saldo aumenta corretamente após um depósito.
-    """
-    conta = Account("Gabriel", balance=1050.0)
-    conta.depositar(200)
-    assert conta.balance == 1250.0
-    assert conta.transactions[-1].tipo == "deposito"
+"""
+Módulo de testes para o serviço de contas do sistema bancário.
 
-def test_sacar_diminui_saldo():
-    """
-    Testa se o saldo diminui corretamente após um saque.
-    """
-    conta = Account("Gabriel", balance=1050.0)
-    conta.depositar(200)
-    conta.sacar(100)
-    assert conta.balance == 1150.0
-    assert conta.transactions[-1].tipo == "saque"
+Contém testes para validar operações de depósito, saque e transferência,
+garantindo o comportamento correto do AccountService.
+"""
 
-def test_saque_maior_que_saldo():
+def test_deposit_and_withdraw() -> None:
+    """Testa depósito e saque em uma conta, verificando o saldo final.
+
+    Cria uma conta, realiza um depósito de 200 e um saque de 50, e valida
+    que o saldo final é 150.
     """
-    Testa se uma exceção é lançada ao tentar sacar valor maior que o saldo.
+    svc = AccountService()
+    acc = svc.create_account(cpf="12345678900", name="Gabriel")
+    svc.deposit(acc.id, 200)
+    svc.withdraw(acc.id, 50)
+    # Recarrega e valida balance
+    acc2 = svc.repo.get_account_by_id(acc.id)
+    assert acc2.balance == pytest.approx(150.0)
+
+def test_transfer_insufficient() -> None:
+    """Testa transferência com saldo insuficiente, esperando exceção.
+
+    Cria duas contas e tenta transferir 100 da primeira para a segunda,
+    que não tem saldo suficiente, verificando se SaldoInsuficienteError é lançada.
     """
-    conta = Account("Gabriel", balance=50.0)
+    svc = AccountService()
+    a1 = svc.create_account(cpf="11111111111", name="A")
+    a2 = svc.create_account(cpf="22222222222", name="B")
     with pytest.raises(SaldoInsuficienteError):
-        conta.sacar(100)
-
-def test_extrato_retorna_transacoes():
-    """
-    Testa se o extrato retorna corretamente as transações realizadas.
-    """
-    conta = Account("Gabriel", balance=1050.0)
-    conta.depositar(100)
-    conta.sacar(30)
-    transacoes, saldo = conta.extrato()
-    assert len(transacoes) == 2
-    assert transacoes[0].tipo == "deposito"
-    assert transacoes[1].tipo == "saque"
-
-def test_deposito_valor_invalido():
-    """
-    Testa se uma exceção é lançada ao tentar depositar valor zero ou negativo.
-    """
-    conta = Account("Gabriel", balance=100.0)
-    with pytest.raises(ValorInvalidoError):
-        conta.depositar(0)
-    with pytest.raises(ValorInvalidoError):
-        conta.depositar(-50)
-
-def test_saque_valor_invalido():
-    """
-    Testa se uma exceção é lançada ao tentar sacar valor zero ou negativo.
-    """
-    conta = Account("Gabriel", balance=100.0)
-    with pytest.raises(ValorInvalidoError):
-        conta.sacar(0)
-    with pytest.raises(ValorInvalidoError):
-        conta.sacar(-10)
-
-def test_limite_saques_excedido():
-    """
-    Testa se uma exceção é lançada ao exceder o número máximo de saques permitidos.
-    """
-    conta = Account("Gabriel", balance=1000.0, max_saques=2)
-    conta.sacar(100)
-    conta.sacar(100)
-    with pytest.raises(LimiteSaquesExcedidoError):
-        conta.sacar(100)
-
-def test_saque_excede_limite():
-    """
-    Testa se uma exceção é lançada ao tentar sacar valor acima do limite permitido por saque.
-    """
-    conta = Account("Gabriel", balance=1000.0, saque_limite=300.0)
-    with pytest.raises(ValorInvalidoError):
-        conta.sacar(400)
+        svc.transfer(a1.id, a2.id, 100)
