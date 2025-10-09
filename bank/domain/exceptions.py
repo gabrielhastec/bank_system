@@ -29,3 +29,13 @@ class DuplicateAccountError(DomainError):
     """Lançada quando uma conta já existe para o mesmo cliente."""
     def __init__(self, identifier: str):
         super().__init__(f"Já existe uma conta registrada para o identificador '{identifier}'.")
+
+class DailyLimitExceededError(DomainError):
+    """Lançada quando a conta atingiu o limite diário de transações."""
+    def __init__(self, account_id: int, limit: int, next_allowed_date_iso: str):
+        msg = (
+            f"Limite diário de {limit} transações atingido para a conta {account_id}. "
+            f"Novas transações serão permitidas a partir de {next_allowed_date_iso}."
+        )
+        super().__init__(msg)
+        
