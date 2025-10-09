@@ -52,12 +52,18 @@ class Transaction:
         """   
         if not isinstance(self.type, str) or self.type not in [t.value for t in TransactionType]:
             raise ValueError(f"Tipo de transação inválido: {self.type}. Use: {[t.value for t in TransactionType]}")
+        
+        # Garantir que o valor seja positivo
         object.__setattr__(self, "amount", ensure_positive_number(self.amount))
         if self.account_id <= 0:
             raise ValorInvalidoError("ID da conta deve ser positivo.")
         if self.related_account_id is not None and self.related_account_id <= 0:
             raise ValorInvalidoError("ID da conta relacionada deve ser positivo.")
         
+        # Definir timestamp atual se não fornecido
+        if self.timestamp is None:
+            object.__setattr__(self, "timestamp", datetime.utcnow())
+
     def as_dict(self) -> dict:
         """Converte a instância da transação em um dicionário.
         
