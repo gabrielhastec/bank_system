@@ -1,9 +1,13 @@
 from datetime import datetime
 from bank.domain.entities.account import Account
 from bank.domain.entities.user import User
-from bank.interfaces.repositories.account_repo_interface import AccountRepositoryInterface
+from bank.interfaces.repositories.account_repo_interface import UserRepositoryInterface
 from bank.interfaces.repositories.user_repo_interface import UserRepositoryInterface
-from bank.exceptions import ValorInvalidoError
+from bank.domain.exceptions import (
+    DuplicateAccountError, 
+    InvalidAccountError,
+    UserNotFoundError
+)
 
 """
 Caso de uso responsável pela abertura de uma nova conta para um usuário existente.
@@ -34,7 +38,7 @@ class OpenAccountUseCase:
         """
         user = self.user_repo.get_by_id(user_id)
         if not user:
-            raise ValorInvalidoError("Usuário não encontrado.")
+            raise InvalidAccountError(f"Usuário com ID {user_id} não encontrado.")
 
         # Criação da nova conta
         new_account = Account(

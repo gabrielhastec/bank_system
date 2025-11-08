@@ -2,7 +2,12 @@ from datetime import datetime
 from bank.domain.entities.transaction import Transaction, TransactionType
 from bank.interfaces.repositories.account_repo_interface import AccountRepositoryInterface
 from bank.interfaces.repositories.transaction_repo_interface import TransactionRepositoryInterface
-from bank.exceptions import ValorInvalidoError, SaldoInsuficienteError
+from bank.domain.exceptions import (
+    InsufficientFundsError,
+    InvalidAccountError,
+    InvalidAmountError,
+    DuplicateAccountError
+)
 
 """
 Caso de uso responsável por realizar transferências entre duas contas.
@@ -28,15 +33,26 @@ class MakeTransferUseCase:
         Returns:
             tuple[Transaction, Transaction]: Transações de saída e entrada.
         """
-        if source_account_id == destination_account_id:
-            raise ValorInvalidoError("Contas de origem e destino não podem ser iguais.")
-
+        
         # Busca as contas envolvidas na transferência
         source_account = self.account_repo.get_by_id(source_account_id)
         destination_account = self.account_repo.get_by_id(destination_account_id)
 
+        # Verifica se as contas de origem e destino existem
         if not source_account or not destination_account:
-            raise ValorInvalidoError("Conta de origem ou destino não encontrada.")
+            raise InvalidAccountError("Conta de origem ou destino inválida.")
+
+        # Verifica se as contas de origem e destino são diferentes
+        if source_account_id == destination_account_id:
+            raise DuplicateAccountError("Conta de origem e destino não podem ser a mesma.")
+
+        # Verifica se o valor da transferência é válido
+        if amount <= 0:
+            raise InvalidAmountError(f"Valor da transferência deve ser maior que zero. Valor fornecido: {amount}")
+
+        # Verifica se há saldo suficiente na conta de origem
+        if source_account.balance < amount:
+            raise InsufficientFundsError(source_account.balance, amount)
 
         # Realiza a transferência
         source_account.withdraw_local(amount)

@@ -5,7 +5,14 @@ lançando exceções personalizadas quando as validações falham.
 """
 
 import re
-from bank.domain.exceptions import ValorInvalidoError
+from bank.domain.exceptions import (
+    DomainError,
+    InvalidAmountError,
+    InvalidNameError,
+    InvalidCPFError,
+    InvalidEmailError,
+    InvalidValueError
+)
 
 def validate_cpf(cpf: str) -> None:
     """Valida o formato básico de um CPF.
@@ -19,7 +26,7 @@ def validate_cpf(cpf: str) -> None:
         ValorInvalidoError: Se o CPF não contiver 11 dígitos numéricos.
     """
     if not re.fullmatch(r"\d{11}", cpf):
-        raise ValorInvalidoError("CPF inválido. Deve conter 11 dígitos numéricos.")
+        raise InvalidCPFError("CPF inválido. Deve conter 11 dígitos numéricos.")
 
 def validate_name(name: str) -> None:
     """Valida o formato de um nome.
@@ -33,7 +40,7 @@ def validate_name(name: str) -> None:
         ValorInvalidoError: Se o nome estiver vazio ou contiver caracteres inválidos.
     """
     if not name or not re.fullmatch(r"[A-Za-zÀ-ÿ\s]+", name):
-        raise ValorInvalidoError("Nome inválido. Use apenas letras e espaços.")
+        raise InvalidNameError(name)
 
 def ensure_positive_number(value: float) -> float:
     """Garante que o valor é um número positivo.
@@ -52,8 +59,17 @@ def ensure_positive_number(value: float) -> float:
     try:
         value = float(value)
     except (TypeError, ValueError):
-        raise ValorInvalidoError("Valor inválido. Deve ser um número.")
+        raise InvalidValueError(value)
 
+    # Verifica se o valor é maior que zero
     if value <= 0:
-        raise ValorInvalidoError("O valor deve ser maior que zero.")
+        raise InvalidValueError(value)
+
+    # Verifica se o valor é um número
+    if not isinstance(value, float):
+        raise InvalidValueError(value)
+
+    # Verifica se o valor é maior que zero
+    if value <= 0:
+        raise InvalidValueError(value)
     return value

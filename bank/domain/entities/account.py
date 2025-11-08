@@ -1,8 +1,11 @@
 from dataclasses import dataclass, field
 from typing import List
-from bank.utils.validators import validate_cpf, validate_name, ensure_positive_number
-from bank.exceptions import ValorInvalidoError, SaldoInsuficienteError
-from .transaction import Transaction
+from bank.infrastructure.utils.validators import validate_cpf, validate_name, ensure_positive_number
+from bank.domain.exceptions import (
+    ValorInvalidoError,
+    SaldoInsuficienteError
+)
+from bank.domain.entities.transaction import Transaction
 
 """Módulo que define a classe Account para gerenciamento de contas financeiras.
 

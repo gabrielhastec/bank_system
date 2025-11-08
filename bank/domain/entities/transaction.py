@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from enum import Enum
-from bank.utils.validators import ensure_positive_number
-from bank.exceptions import ValorInvalidoError
+from bank.infrastructure.utils.validators import ensure_positive_number
+from bank.domain.exceptions import ValorInvalidoError, InvalidAmountError
 
 """Módulo que define a classe Transaction para representar transações financeiras.
 
@@ -51,14 +51,14 @@ class Transaction:
             None
         """   
         if not isinstance(self.type, str) or self.type not in [t.value for t in TransactionType]:
-            raise ValueError(f"Tipo de transação inválido: {self.type}. Use: {[t.value for t in TransactionType]}")
+            raise ValorInvalidoError(f"Tipo de transação inválido: {self.type}. Use: {[t.value for t in TransactionType]}")
         
         # Garantir que o valor seja positivo
         object.__setattr__(self, "amount", ensure_positive_number(self.amount))
         if self.account_id <= 0:
             raise ValorInvalidoError("ID da conta deve ser positivo.")
         if self.related_account_id is not None and self.related_account_id <= 0:
-            raise ValorInvalidoError("ID da conta relacionada deve ser positivo.")
+            raise InvalidAmountError("ID da conta relacionada deve ser positivo.")
         
         # Definir timestamp atual se não fornecido
         if self.timestamp is None:

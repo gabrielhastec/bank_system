@@ -2,7 +2,10 @@ from datetime import datetime
 from bank.domain.entities.transaction import Transaction, TransactionType
 from bank.interfaces.repositories.account_repo_interface import AccountRepositoryInterface
 from bank.interfaces.repositories.transaction_repo_interface import TransactionRepositoryInterface
-from bank.exceptions import ValorInvalidoError
+from bank.domain.exceptions import ( 
+    InvalidAmountError,
+    InvalidAccountError
+)
 
 """
 Caso de uso responsável por realizar depósitos em uma conta bancária.
@@ -30,13 +33,16 @@ class MakeDepositUseCase:
         # Validação do valor do depósito
         account = self.account_repo.get_by_id(account_id)
         if not account:
-            raise ValorInvalidoError("Conta não encontrada.")
+            raise InvalidAccountError(f"Conta com ID {account_id} não encontrada.")
+        
+        # Verifica se o valor do depósito é válido
+        if amount <= 0:
+            raise InvalidAmountError(f"Valor do depósito deve ser maior que zero. Valor fornecido: {amount}")
 
-        # Realiza o depósito na conta
-        account.deposit_local(amount)
+        # Deposita o valor na conta
         self.account_repo.update(account)
-
-        # Criação da transação de depósito
+        
+        # Cria a transação de depósito
         transaction = Transaction(
             id=self.transaction_repo.get_next_id(),
             account_id=account.id,
@@ -46,6 +52,6 @@ class MakeDepositUseCase:
             description=description
         )
 
-        # Registro da transação
+        # Registra a transação
         self.transaction_repo.add(transaction)
         return transaction

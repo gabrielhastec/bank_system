@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from datetime import datetime
-from bank.utils.validators import validate_cpf, validate_name, validate_email
-from bank.exceptions import ValorInvalidoError
-from .account import Account
+from bank.domain.entities.account import Account
+from bank.infrastructure.utils.validators import validate_name, validate_cpf, validate_email
+from bank.domain.exceptions import InvalidAmountError, DuplicateAccountError
 
 """
 Módulo que define a classe User para gerenciamento de usuários do sistema bancário.
@@ -41,7 +41,7 @@ class User:
         validate_cpf(self.cpf)
         validate_email(self.email)
         if self.id <= 0:
-            raise ValorInvalidoError("ID do usuário deve ser positivo.")
+            raise InvalidAmountError("ID do usuário deve ser positivo.")
 
     def add_account(self, account: Account) -> None:
         """Associa uma nova conta a este usuário.
@@ -53,7 +53,7 @@ class User:
             ValorInvalidoError: Se a conta já estiver associada.
         """
         if any(acc.id == account.id for acc in self.accounts):
-            raise ValorInvalidoError(f"A conta {account.id} já está associada a este usuário.")
+            raise DuplicateAccountError(f"A conta {account.id} já está associada a este usuário.")
         self.accounts.append(account)
 
     def get_account_by_id(self, account_id: int) -> Optional[Account]:

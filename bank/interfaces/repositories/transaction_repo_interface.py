@@ -54,3 +54,23 @@ class TransactionRepositoryInterface(Protocol):
             Optional[Transaction]: Instância da transação se encontrada, ou None se não existir.
         """
         ...
+
+    def get_transactions_by_type_and_date_range(
+        self,
+        account_id: int,
+        transaction_type: str,
+        start_date: "datetime",
+        end_date: "datetime"
+    ) -> List["Transaction"]:
+        """Recupera transações de um tipo específico dentro de um intervalo de datas.
+
+        Args:
+            account_id (int): Identificador da conta.
+            transaction_type (str): Tipo da transação (e.g., 'withdraw', 'deposit').
+            start_date (datetime): Data inicial do intervalo.
+            end_date (datetime): Data final do intervalo.
+
+        Returns:
+            List[Transaction]: Lista de transações que correspondem aos critérios.
+        """
+        ...
