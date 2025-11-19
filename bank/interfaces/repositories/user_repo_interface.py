@@ -6,56 +6,44 @@ concretas.
 """
 
 from typing import Protocol, runtime_checkable, Optional, TYPE_CHECKING, Dict, Any
+from bank.domain.exceptions import UserNotFoundError, InvalidEmailError
 
 if TYPE_CHECKING:
     from bank.domain.entities.user import User
 
 @runtime_checkable
 class UserRepositoryInterface(Protocol):
-    """Contrato para repositórios de usuários.
-
-    Define métodos que implementações concretas devem seguir para gerenciar
-    usuários no sistema, garantindo compatibilidade com os casos de uso.
-    """
+    """Contrato para repositórios de usuários."""
     def get_by_id(self, user_id: int) -> Optional["User"]:
         """Recupera um usuário pelo seu identificador.
 
-        Args:
-            user_id (int): Identificador do usuário a ser recuperado.
-
-        Returns:
-            Optional[User]: Instância do usuário se encontrada, ou None se não existir.
+        Raises:
+            UserNotFoundError: se o usuário não for encontrado.
         """
         ...
 
     def get_by_email(self, email: str) -> Optional["User"]:
         """Recupera um usuário pelo seu endereço de e-mail.
 
-        Args:
-            email (str): Endereço de e-mail do usuário a ser recuperado.
-
-        Returns:
-            Optional[User]: Instância do usuário se encontrada, ou None se não existir.
+        Raises:
+            InvalidEmailError: se o e-mail informado for inválido.
         """
         ...
 
     def add(self, payload: Dict[str, Any]) -> int:
         """Insere um novo usuário no repositório.
 
-        Args:
-            payload (Dict[str, Any]): Dicionário com os dados do usuário a ser criado.
-
-        Returns:
-            int: Identificador do usuário criado.
+        Raises:
+            InvalidEmailError: se o e-mail for inválido.
+            ValueError: se payload estiver incompleto.
         """
         ...
 
     def update(self, user_id: int, payload: Dict[str, Any]) -> None:
         """Atualiza os dados de um usuário existente.
 
-        Args:
-            user_id (int): Identificador do usuário a ser atualizado.
-            payload (Dict[str, Any]): Dicionário com os dados atualizados do usuário.
+        Raises:
+            UserNotFoundError: se o usuário não existir.
+            InvalidEmailError: se o e-mail for inválido no payload.
         """
         ...
-        
