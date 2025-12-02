@@ -1,0 +1,79 @@
+frontend/
+├── package.json
+├── public/
+└── src/
+    ├── app/
+    │   ├── routes.jsx           # Rotas da aplicação
+    │   ├── providers.jsx        # Providers globais (theme, auth, query...)
+    │   └── App.jsx              # Root component
+    │
+    ├── assets/                  # Imagens, ícones, fontes
+    │   ├── icons/
+    │   └── images/
+    │
+    ├── components/              # Componentes reutilizáveis (atomic)
+    │   ├── ui/                  # Botões, inputs, modais...
+    │   ├── layout/              # Header, sidebar, footer
+    │   └── feedback/            # Toasts, alerts
+    │
+    ├── features/                # Abordagem por feature (clean, escalável)
+    │   ├── auth/
+    │   │   ├── pages/
+    │   │   │   ├── LoginPage.jsx
+    │   │   │   └── RegisterPage.jsx
+    │   │   ├── components/
+    │   │   │   └── LoginForm.jsx
+    │   │   ├── hooks/
+    │   │   │   └── useAuth.js
+    │   │   └── services/
+    │   │       └── authApi.js
+    │   │
+    │   ├── account/
+    │   │   ├── pages/
+    │   │   │   ├── CreateAccountPage.jsx
+    │   │   │   └── AccountDetailsPage.jsx
+    │   │   ├── components/
+    │   │   │   ├── AccountForm.jsx
+    │   │   │   └── AccountInfo.jsx
+    │   │   ├── hooks/
+    │   │   │   └── useAccount.js
+    │   │   └── services/
+    │   │       └── accountApi.js
+    │   │
+    │   ├── transaction/
+    │   │   ├── pages/
+    │   │   │   ├── DepositPage.jsx
+    │   │   │   ├── WithdrawPage.jsx
+    │   │   │   └── TransferPage.jsx
+    │   │   ├── components/
+    │   │   │   ├── TransactionForm.jsx
+    │   │   │   └── StatementTable.jsx
+    │   │   ├── hooks/
+    │   │   │   └── useTransactions.js
+    │   │   └── services/
+    │   │       └── transactionApi.js
+    │   │
+    │   └── dashboard/          # futura tela principal
+    │       ├── pages/
+    │       ├── components/
+    │       ├── hooks/
+    │       └── services/
+    │
+    ├── hooks/                  # Hooks globais (tema, autenticação, etc)
+    │   ├── useTheme.js
+    │   └── useAuthGuard.js
+    │
+    ├── services/               # Serviços globais
+    │   ├── api/
+    │   │   ├── httpClient.js   # axios fetch client
+    │   │   └── interceptors.js # intercepta token, erros, etc
+    │   ├── storage/
+    │   │   └── localStorage.js
+    │   └── utils/
+    │       └── formatter.js
+    │
+    ├── styles/                 # Tailwind, global styles
+    │   ├── globals.css
+    │   └── tailwind.css
+    │
+    └── index.jsx               # Entry point (ReactDOM)
