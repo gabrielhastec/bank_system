@@ -1,0 +1,22 @@
+# Para injeção de dependência
+dependency-injector
+
+# Para hash de senhas
+passlib[bcrypt]
+
+# Se usar FastAPI, Flask ou Django
+fastapi
+# flask
+# django
+
+# ORM / Banco de dados
+sqlmodel
+sqlalchemy
+# psycopg2-binary
+# pymysql
+
+# Para validação de dados 
+# pydantic
+
+# Para testes
+# pytest

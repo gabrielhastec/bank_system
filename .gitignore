@@ -1,0 +1,90 @@
+# ============================
+# PYTHON
+# ============================
+
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Bytecode e cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# Caches de ferramentas
+.mypy_cache/
+.pytest_cache/
+.python-version
+pytestdebug.log
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.temp
+
+# ============================
+# FASTAPI / SQLALCHEMY / ALEMBIC
+# ============================
+
+
+
+# ============================
+# NODE / REACT FRONTEND
+# ============================
+
+# Dependências
+
+
+# Build
+
+
+# Arquivos temporários
+
+
+# Ambiente
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.test.local
+
+# ============================
+# DATA / ARQUIVOS DE RUNTIME
+# ============================
+
+data/
+backup/
+*.db
+*.sqlite
+
+# ============================
+# EDITORES
+# ============================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ
+
+
+# ============================
+# SISTEMA OPERACIONAL
+# ============================
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+
+
+# Linux
+
