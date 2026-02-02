@@ -19,9 +19,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import List
 
-from ..entities.customer import Customer
-from ..value_objects.money import Money
-from ...domain.exceptions import InsufficientFunds, DailyLimitExceeded
+from backend.src.domain.entities.transaction import Transaction
+from backend.src.domain.entities.customer import Customer
+from backend.src.domain.value_objects.money import Money
+from backend.src.domain.exceptions import InsufficientFunds, DailyLimitExceeded
 
 @dataclass
 class Account:
@@ -72,11 +73,16 @@ class Account:
         """
         self.balance += amount
 
+        transaction = Transaction.create_deposit(self.account_id, amount)
+        transaction.occurred_at = occurred_at
+        
         self.transactions.append({
             "type": "deposit",
             "amount": amount,
-            "occurred_at": occurred_at.isoformat()
+            "occurred_at": occurred_at.isoformat(),
+            "transaction_id": transaction.transaction_id
         })
+        return transaction
 
     def withdraw(self, amount: Money, occurred_at: datetime):
         """
@@ -116,11 +122,16 @@ class Account:
         self.daily_withdrawal_amount += amount
         self.daily_withdrawal_count += 1
 
+        transaction = Transaction.create_withdrawal(self.account_id, amount)
+        transaction.occurred_at = occurred_at
         self.transactions.append({
             "type": "withdrawal",
             "amount": amount,
-            "occurred_at": occurred_at.isoformat()
+            "occurred_at": occurred_at.isoformat(),
+            "transaction_id": transaction.transaction_id
         })
+        
+        return transaction
 
     def get_statement(self) -> List[dict]:
         """
