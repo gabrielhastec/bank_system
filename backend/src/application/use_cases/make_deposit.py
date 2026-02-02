@@ -1,10 +1,11 @@
 
-
 from dataclasses import dataclass
 from datetime import datetime
+
 from ...domain.aggregates.account import Account
-from ..ports.account_repository import IAccountRepository
 from ...domain.value_objects.money import Money
+from ..ports.account_repository import IAccountRepository
+from ..ports.transaction_repository import ITransactionRepository
 
 @dataclass
 class DepositCommand:
@@ -12,8 +13,9 @@ class DepositCommand:
     amount: str  # vem como string do front
 
 class MakeDepositUseCase:
-    def __init__(self, account_repo: IAccountRepository):
+    def __init__(self, account_repo: IAccountRepository, transaction_repo: ITransactionRepository):
         self.account_repo = account_repo
+        self.transaction_repo = transaction_repo
 
     def execute(self, command: DepositCommand):
         account = self.account_repo.get_by_id(command.account_id)
@@ -21,7 +23,10 @@ class MakeDepositUseCase:
             raise ValueError("Conta não encontrada")
         
         amount = Money(command.amount)
-        account.deposit(amount, datetime.utcnow())
+        occurred_at = datetime.utcnow()
+        transaction = account.deposit(amount, occurred_at)
         self.account_repo.save(account)
+        self.transaction_repo.save(transaction)
         return account
+    
     

@@ -1,44 +1,69 @@
 
 from dataclasses import dataclass
+import jwt
+from datetime import datetime, timedelta
 
-from ...domain.value_objects.cpf import CPF
-from ..ports.customer_repository import ICustomerRepository
-from ..ports.account_repository import IAccountRepository
+from backend.src.domain.value_objects.cpf import CPF
+from backend.src.config.settings import settings
+from backend.src.application.ports.customer_repository import ICustomerRepository
+from backend.src.application.ports.account_repository import IAccountRepository
 
 @dataclass
 class LoginCommand:
     cpf: str
     password: str
 
+@dataclass
+class LoginResult:
+    token: str
+    account_id: str
+    name: str
+    cpf: str
+
 class LoginUseCase:
+
     def __init__(self, customer_repo: ICustomerRepository, account_repo: IAccountRepository):
         self.customer_repo = customer_repo
         self.account_repo = account_repo
 
     def execute(self, command: LoginCommand):
+
+        # Valida CPF
         cpf = CPF(command.cpf)
+
+        # Busca cliente pelo CPF
         customer = self.customer_repo.get_by_cpf(cpf)
         if not customer:
             raise ValueError("CPF ou senha inválidos")
         
+        # Verifica senha
         if not customer.verify_password(command.password):
             raise ValueError("CPF ou senha inválidos")
         
-        # Aqui, precisaríamos de um token JWT ou similar. Por enquanto, retornaremos o account_id.
-        # Vamos supor que o customer tem uma conta. Precisamos buscar a conta pelo CPF? 
-        # Não temos esse método no account_repo. Vamos adicionar?
-        # Ou podemos mudar: o login retorna o customer e depois o frontend busca a conta?
-        # Por simplicidade, vamos retornar o customer e o account_id.
-        # Mas note: um CPF pode ter apenas uma conta? No nosso sistema, sim.
-        # Então, vamos adicionar um método no account_repo para buscar por CPF.
+        # Busca conta associada ao cliente
         account = self.account_repo.get_by_cpf(cpf)
         if not account:
             raise ValueError("Conta não encontrada para este CPF")
         
-        # Gerar token JWT? Por enquanto, retornaremos os dados.
-        return {
-            "account_id": account.account_id,
+        # Gera token JWT
+        token_data = {
+            "sub": account.account_id,
             "name": customer.name,
-            "cpf": str(customer.cpf)
+            "cpf": str(customer.cpf),
+            "iat": datetime.utcnow(),
+            "account_id": account.account_id
         }
+
+        token = jwt.encode(
+            token_data,
+            settings.jwt_secret_key,
+            algorithm=settings.jwt_algorithm
+        )
+        
+        return LoginResult(
+            token=token,
+            account_id=account.account_id,
+            name=customer.name,
+            cpf=str(customer.cpf)
+        )
     
